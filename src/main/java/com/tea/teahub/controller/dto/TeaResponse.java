@@ -4,16 +4,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record   TeaResponse(
-        UUID id,
-        String name,
-        String originCountry,
-        String originRegion,
-        String type,
-        String notes,
-        BigDecimal rating,
+public record TeaResponse(
+    UUID id,
+    String name,
+    String originCountry,
+    String originRegion,
+    String type,
+    String notes,
+    BigDecimal price,
 
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt
 ) {
 }

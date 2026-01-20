@@ -14,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/teas")
@@ -33,9 +35,18 @@ public class TeaController {
             @RequestParam(required = false) String originCountry,
             @RequestParam(required = false) String originRegion,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer maxAmount,
+            @RequestParam(required = false) Integer minAmount,
             @PageableDefault(sort = "name") Pageable pageable) {
 
-        TeaFilter filter = new TeaFilter(teaType, originCountry, originRegion, name);
+        TeaFilter filter = new TeaFilter(
+            teaType,
+            originCountry,
+            originRegion,
+            name,
+            maxAmount,
+            minAmount
+        );
         log.info("Запрос на получение чая по фильтру: {}", filter);
         return teaService.getTeaList(filter, pageable);
     }
@@ -56,7 +67,7 @@ public class TeaController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void deleteTea(@PathVariable String id) {
+    void deleteTea(@PathVariable UUID id) {
         log.info("Запрос на удаление чая с id: {}", id);
         teaService.deleteById(id);
     }

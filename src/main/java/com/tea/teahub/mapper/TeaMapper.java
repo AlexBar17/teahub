@@ -21,6 +21,8 @@ public abstract class TeaMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "active", ignore = true)
+    @Mapping(target = "version", ignore = true)
     public abstract Tea toEntity(TeaRequest teaRequest);
 
     protected String map(TeaType type) {
@@ -31,7 +33,7 @@ public abstract class TeaMapper {
         return type == null ? null : TeaType.valueOf(type);
     }
 
-    protected BigDecimal map(BigDecimal rating) {
-        return rating == null ? null : rating.stripTrailingZeros();
+    protected BigDecimal map(BigDecimal amount) {
+        return amount == null ? null : amount.stripTrailingZeros();
     }
 }

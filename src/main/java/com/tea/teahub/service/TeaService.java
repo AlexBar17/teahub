@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -69,14 +70,14 @@ public class TeaService {
         tea.setOriginRegion(teaRequest.originRegion());
         tea.setType(TeaType.valueOf(teaRequest.type()));
         tea.setNotes(teaRequest.notes());
-        tea.setRating(teaRequest.rating());
+        tea.setPrice(teaRequest.price());
 
         log.info("Чай {} с id: {} успешно обновлен", tea.getName(), tea.getId());
         return teaMapper.toResponse(tea);
     }
 
-    public void deleteById(String id) {
-        teaStorage.deleteById(UUID.fromString(id));
+    public void deleteById(UUID id) {
+        Optional<Tea> tea = teaStorage.findById(id);
         log.info("Чай с id: {} успешно удален", id);
     }
 
@@ -95,7 +96,6 @@ public class TeaService {
                 String[] words = normalizedName.split(" ");
                 specification = specification.and(TeaSpecification.hasWordsInName(words));
             }
-
         }
 
         if (teaFilter.teaType() != null) {
@@ -107,7 +107,13 @@ public class TeaService {
         if (teaFilter.originRegion() != null) {
             specification = specification.and(TeaSpecification.hasOriginRegion(teaFilter.originRegion()));
         }
-
+        if (teaFilter.maxAmount() != null) {
+            specification = specification.and(TeaSpecification.amountLessThan(teaFilter.maxAmount()));
+        }
+        if (teaFilter.minAmount() != null) {
+            specification = specification.and(TeaSpecification.amountGreaterThan(teaFilter.minAmount()));
+        }
+        specification = specification.and(TeaSpecification.isActive());
         return specification;
     }
 

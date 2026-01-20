@@ -29,11 +29,26 @@ interface TeaSpecification {
                 .reduce(Specification.unrestricted(), Specification::and);
     }
 
+    static Specification<Tea> amountGreaterThan(Integer amount) {
+        return (root, query, criteriaBuilder) ->
+            criteriaBuilder.greaterThan(root.get("amount"), amount);
+    }
+
+    static Specification<Tea> amountLessThan(Integer amount) {
+        return (root, query, criteriaBuilder) ->
+            criteriaBuilder.lessThan(root.get("amount"), amount);
+    }
+
     private static Specification<Tea> hasWordInName(String word) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("name")),
                         "%" + word.toLowerCase() + "%"
                 );
+    }
+
+    static Specification<Tea> isActive() {
+        return ((root, query, criteriaBuilder) ->
+            criteriaBuilder.equal(root.get("active"), true));
     }
 }

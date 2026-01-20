@@ -13,10 +13,6 @@ public record TeaRequest(
         @NotBlank String originRegion,
         @NotBlank String type,
         @NotBlank String notes,
-
-        @NotNull
-        @DecimalMin(value = "0.00", inclusive = true)
-        @DecimalMax(value = "5.00", inclusive = true)
-        BigDecimal rating
+        @NotNull BigDecimal price
 ) {
 }

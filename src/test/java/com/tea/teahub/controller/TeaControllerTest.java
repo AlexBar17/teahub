@@ -199,7 +199,8 @@ class TeaControllerTest extends FullContext {
                 teaMapper.toResponse(gaba)
         );
         // when
-        String contentAsString = mockMvc.perform(get("/api/v1/teas?teaType=OOLONG&originCountry=China-Taiwan&originRegion=Alishan&name=Alishan Gaba"))
+        String contentAsString = mockMvc.perform(get("/api/v1/teas?teaType=OOLONG&originCountry=China-Taiwan" +
+                "&originRegion=Alishan&name=Alishan Gaba&maxAmount=10&minAmount=1&minRating=4.70"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -257,7 +258,6 @@ class TeaControllerTest extends FullContext {
                 .originRegion("Alishani")
                 .type(TeaType.PUER)
                 .notes("GABA processed calming effect")
-                .rating(new BigDecimal("4.70"))
                 .build();
 
         errorGaba = teaStorage.save(errorGaba);
@@ -380,7 +380,6 @@ class TeaControllerTest extends FullContext {
                 .originRegion(ALISHAN)
                 .type(TeaType.OOLONG)
                 .notes(GABA_NOTES)
-                .rating(RATING_48)
                 .build();
     }
 
@@ -391,7 +390,6 @@ class TeaControllerTest extends FullContext {
                 .originRegion(YUNNAN)
                 .type(TeaType.PUER)
                 .notes(PUER_NOTES)
-                .rating(RATING_473)
                 .build();
     }
 
@@ -402,7 +400,6 @@ class TeaControllerTest extends FullContext {
                 .originRegion(ZHEJIANG)
                 .type(TeaType.GREEN)
                 .notes(LONGJING_NOTES)
-                .rating(RATING_466)
                 .build();
     }
 
