@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0
+      author: kraken
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            tableName: teas
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_tea
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: origin_country
+                  type: varchar(255)
+              - column:
+                  name: origin_region
+                  type: varchar(255)
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: text
+              - column:
+                  name: rating
+                  type: numeric(3,2)
+                  constraints:
+                    checkConstraint: "rating BETWEEN 0.00 AND 5.00"
+              - column:
+                  name: created_at
+                  type: datetime
+              - column:
+                  name: updated_at
+                  type: datetime
+        - createIndex:
+            tableName: teas
+            indexName: idx_teas_type
+            columns:
+              - column:
+                  name: type
+        - createIndex:
+            tableName: teas
+            indexName: idx_teas_origin_country
+            columns:
+              - column:
+                  name: origin_country
+        - createIndex:
+            tableName: teas
+            indexName: idx_teas_origin_region
+            columns:
+              - column:
+                  name: origin_region

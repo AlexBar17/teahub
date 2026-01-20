@@ -1,0 +1,10 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: teahub
+  datasource:
+    username: sir
+    password: lancer17!
+    url: "jdbc:postgresql://localhost/teahub"
