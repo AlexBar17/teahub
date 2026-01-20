@@ -43,8 +43,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.testcontainers:postgresql:1.21.4'
+    testImplementation "io.zonky.test:embedded-database-spring-test:2.7.1"
+    testImplementation "io.zonky.test:embedded-postgres:2.2.0"
 }
 
 tasks.named('test') {
