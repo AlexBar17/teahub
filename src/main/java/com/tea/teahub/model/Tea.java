@@ -18,30 +18,44 @@ import java.util.UUID;
 @AllArgsConstructor
 @ToString
 @Builder
-@Table(name = "teas")
-public class Tea{
+@Table(name = "tea")
+public class Tea {
 
     @Id
     @UuidGenerator
     private UUID id;
 
+    @Version
+    private Long version;
+
+    @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false)
     private String originCountry;
 
+    @Column(nullable = false)
     private String originRegion;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
     private TeaType type;
 
+    @Column(nullable = false, columnDefinition = "text")
     private String notes;
 
-    private BigDecimal rating;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean active = true;
 
     @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
-
 }

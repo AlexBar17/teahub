@@ -69,15 +69,20 @@ public class TeaService {
         tea.setOriginRegion(teaRequest.originRegion());
         tea.setType(TeaType.valueOf(teaRequest.type()));
         tea.setNotes(teaRequest.notes());
-        tea.setRating(teaRequest.rating());
+        tea.setPrice(teaRequest.price());
 
         log.info("Чай {} с id: {} успешно обновлен", tea.getName(), tea.getId());
         return teaMapper.toResponse(tea);
     }
 
-    public void deleteById(String id) {
-        teaStorage.deleteById(UUID.fromString(id));
-        log.info("Чай с id: {} успешно удален", id);
+    public void deleteById(UUID id) {
+        teaStorage.findById(id).ifPresentOrElse(
+            tea -> {
+                tea.setActive(false);
+                log.info("Чай с id: {} успешно деактивирован", id);
+            },
+            () -> log.info("Чай с id: {} не был заведен в системе", id)
+        );
     }
 
     private Specification<Tea> getSpecificationByFilter(TeaFilter teaFilter) {
@@ -95,7 +100,6 @@ public class TeaService {
                 String[] words = normalizedName.split(" ");
                 specification = specification.and(TeaSpecification.hasWordsInName(words));
             }
-
         }
 
         if (teaFilter.teaType() != null) {
@@ -107,7 +111,13 @@ public class TeaService {
         if (teaFilter.originRegion() != null) {
             specification = specification.and(TeaSpecification.hasOriginRegion(teaFilter.originRegion()));
         }
-
+        if (teaFilter.maxPrice() != null) {
+            specification = specification.and(TeaSpecification.amountLessThan(teaFilter.maxPrice()));
+        }
+        if (teaFilter.minPrice() != null) {
+            specification = specification.and(TeaSpecification.amountGreaterThan(teaFilter.minPrice()));
+        }
+        specification = specification.and(TeaSpecification.isActive());
         return specification;
     }
 

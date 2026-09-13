@@ -5,7 +5,7 @@ databaseChangeLog:
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
         - createTable:
-            tableName: teas
+            tableName: tea
             columns:
               - column:
                   name: id
@@ -14,6 +14,11 @@ databaseChangeLog:
                     nullable: false
                     primaryKey: true
                     primaryKeyName: pk_tea
+              - column:
+                  name: version
+                  type: bigint
+                  constraints:
+                    nullable: false
               - column:
                   name: name
                   type: varchar(255)
@@ -35,10 +40,15 @@ databaseChangeLog:
                   name: notes
                   type: text
               - column:
-                  name: rating
-                  type: numeric(3,2)
+                  name: price
+                  type: NUMERIC(10,2)
                   constraints:
-                    checkConstraint: "rating BETWEEN 0.00 AND 5.00"
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  constraints:
+                    nullable: false
               - column:
                   name: created_at
                   type: datetime
@@ -46,20 +56,20 @@ databaseChangeLog:
                   name: updated_at
                   type: datetime
         - createIndex:
-            tableName: teas
-            indexName: idx_teas_type
+            tableName: tea
+            indexName: idx_tea_type
             columns:
               - column:
                   name: type
         - createIndex:
-            tableName: teas
-            indexName: idx_teas_origin_country
+            tableName: tea
+            indexName: idx_tea_origin_country
             columns:
               - column:
                   name: origin_country
         - createIndex:
-            tableName: teas
-            indexName: idx_teas_origin_region
+            tableName: tea
+            indexName: idx_tea_origin_region
             columns:
               - column:
                   name: origin_region
