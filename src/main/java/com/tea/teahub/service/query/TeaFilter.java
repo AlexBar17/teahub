@@ -7,7 +7,7 @@ public record TeaFilter(
     String originCountry,
     String originRegion,
     String name,
-    Integer maxAmount,
-    Integer minAmount
+    Integer maxPrice,
+    Integer minPrice
 ) {
 }

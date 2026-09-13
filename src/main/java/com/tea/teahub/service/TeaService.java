@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -77,8 +76,13 @@ public class TeaService {
     }
 
     public void deleteById(UUID id) {
-        Optional<Tea> tea = teaStorage.findById(id);
-        log.info("Чай с id: {} успешно удален", id);
+        teaStorage.findById(id).ifPresentOrElse(
+            tea -> {
+                tea.setActive(false);
+                log.info("Чай с id: {} успешно деактивирован", id);
+            },
+            () -> log.info("Чай с id: {} не был заведен в системе", id)
+        );
     }
 
     private Specification<Tea> getSpecificationByFilter(TeaFilter teaFilter) {
@@ -107,11 +111,11 @@ public class TeaService {
         if (teaFilter.originRegion() != null) {
             specification = specification.and(TeaSpecification.hasOriginRegion(teaFilter.originRegion()));
         }
-        if (teaFilter.maxAmount() != null) {
-            specification = specification.and(TeaSpecification.amountLessThan(teaFilter.maxAmount()));
+        if (teaFilter.maxPrice() != null) {
+            specification = specification.and(TeaSpecification.amountLessThan(teaFilter.maxPrice()));
         }
-        if (teaFilter.minAmount() != null) {
-            specification = specification.and(TeaSpecification.amountGreaterThan(teaFilter.minAmount()));
+        if (teaFilter.minPrice() != null) {
+            specification = specification.and(TeaSpecification.amountGreaterThan(teaFilter.minPrice()));
         }
         specification = specification.and(TeaSpecification.isActive());
         return specification;

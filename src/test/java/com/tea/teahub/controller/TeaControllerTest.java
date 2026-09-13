@@ -8,7 +8,7 @@ import com.tea.teahub.controller.dto.TeaResponse;
 import com.tea.teahub.controller.dto.ValidationErrorMessage;
 import com.tea.teahub.model.Tea;
 import com.tea.teahub.model.enums.TeaType;
-import org.jetbrains.annotations.NotNull;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import static java.util.Comparator.nullsFirst;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,49 +33,36 @@ class TeaControllerTest extends FullContext {
     }
 
     @Test
-    void addTea_validRequest_returns200AndCreate() throws Exception {
+    void addTea_validRequest_returns200AndCreatesTea() throws Exception {
         // given
         Tea expectedTea = getGaba();
-        TeaRequest ExspectedTeaRequest = getGabaRequest();
+        TeaRequest request = getGabaRequest();
 
         // when
-        String contentAsString = mockMvc.perform(
-                        post("/api/v1/teas")
-                                .content(objectMapper.writeValueAsString(ExspectedTeaRequest))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        String responseBody = mockMvc.perform(
+                post("/api/v1/teas")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
-                // then
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        TeaResponse teaResponse = objectMapper.readValue(contentAsString, TeaResponse.class);
+        // then
+        TeaResponse response = objectMapper.readValue(responseBody, TeaResponse.class);
+        TeaResponse expectedResponse = teaMapper.toResponse(expectedTea);
 
-        assertNotNull(teaResponse);
-        TeaResponse expected = teaMapper.toResponse(expectedTea);
+        assertThat(response)
+            .usingRecursiveComparison()
+            .ignoringFields("id")
+            .withComparatorForType(nullsFirst(BigDecimal::compareTo), BigDecimal.class)
+            .isEqualTo(expectedResponse);
 
-        assertThat(teaResponse)
-                .usingRecursiveComparison()
-                .ignoringFields("id")
-                .withComparatorForType(
-                        nullsFirst(BigDecimal::compareTo),
-                        BigDecimal.class
-                )
-                .isEqualTo(expected);
-
-        Tea teaFromStorage = teaStorage.findById(teaResponse.id()).get();
-
-        assertThat(teaFromStorage)
-                .usingRecursiveComparison()
-                .ignoringFields("id")
-                .ignoringFields("createdAt")
-                .ignoringFields("updatedAt")
-                .withComparatorForType(
-                        nullsFirst(BigDecimal::compareTo),
-                        BigDecimal.class
-                )
-                .isEqualTo(expectedTea);
+        assertThat(teaStorage.findById(response.id()))
+            .hasValueSatisfying(savedTea ->
+                assertTeaEqualsIgnoringGeneratedFields(savedTea, expectedTea)
+            );
     }
 
     @Test
@@ -87,17 +74,17 @@ class TeaControllerTest extends FullContext {
 
         // when
         mockMvc.perform(
-                        post("/api/v1/teas")
-                                .content(objectMapper.writeValueAsString(request))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+                post("/api/v1/teas")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
 
-                // then
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("1001"))
-                .andExpect(
-                        jsonPath("$.message").value("Чай с именем GABA Alishan уже есть в каталоге")
-                );
+            // then
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("1001"))
+            .andExpect(
+                jsonPath("$.message").value("Чай с именем GABA Alishan уже есть в каталоге")
+            );
 
     }
 
@@ -105,43 +92,43 @@ class TeaControllerTest extends FullContext {
     void addTea_invalidRequest_returnsValidationErrors() throws Exception {
         // given
         String invalidJson = """
-                    {
-                        "name": "",
-                            "originCountry": " ",
-                            "originRegion": "",
-                            "type": "",
-                            "notes": "",
-                            "rating": 10
-                    }
-                """;
+                {
+                    "name": "",
+                        "originCountry": " ",
+                        "originRegion": "",
+                        "type": "",
+                        "notes": "",
+                        "price": ""
+                }
+            """;
 
         ValidationErrorMessage expected = new ValidationErrorMessage(
-                "2001",
-                "В запросе есть ошибки валидации",
-                List.of(
-                        new ValidationErrorMessage.Violation("originRegion", "must not be blank"),
-                        new ValidationErrorMessage.Violation("name", "must not be blank"),
-                        new ValidationErrorMessage.Violation("originCountry", "must not be blank"),
-                        new ValidationErrorMessage.Violation("notes", "must not be blank"),
-                        new ValidationErrorMessage.Violation("rating", "must be less than or equal to 5.00"),
-                        new ValidationErrorMessage.Violation("type", "must not be blank")
-                )
+            "2001",
+            "В запросе есть ошибки валидации",
+            List.of(
+                new ValidationErrorMessage.Violation("originRegion", "must not be blank"),
+                new ValidationErrorMessage.Violation("name", "must not be blank"),
+                new ValidationErrorMessage.Violation("originCountry", "must not be blank"),
+                new ValidationErrorMessage.Violation("notes", "must not be blank"),
+                new ValidationErrorMessage.Violation("type", "must not be blank"),
+                new ValidationErrorMessage.Violation("price", "must not be null")
+            )
         );
 
         // when
         String contentAsString = mockMvc.perform(
-                        post("/api/v1/teas")
-                                .content(invalidJson)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                // then
-                .andExpect(status().isBadRequest())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                post("/api/v1/teas")
+                    .content(invalidJson)
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            // then
+            .andExpect(status().isBadRequest())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
         ValidationErrorMessage actual =
-                objectMapper.readValue(contentAsString, ValidationErrorMessage.class);
+            objectMapper.readValue(contentAsString, ValidationErrorMessage.class);
 
         assertThat(actual.code()).isEqualTo(expected.code());
         assertThat(actual.message()).isEqualTo(expected.message());
@@ -158,32 +145,37 @@ class TeaControllerTest extends FullContext {
         teaStorage.saveAll(List.of(puer, longjing, gaba));
 
         List<TeaResponse> expectedList = List.of(
-                teaMapper.toResponse(gaba),
-                teaMapper.toResponse(longjing),
-                teaMapper.toResponse(puer)
+            teaMapper.toResponse(gaba),
+            teaMapper.toResponse(longjing),
+            teaMapper.toResponse(puer)
         );
         String contentAsString = mockMvc.perform(get("/api/v1/teas"))
 
-                // then
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+            // then
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
         JsonNode root = objectMapper.readTree(contentAsString);
 
         List<TeaResponse> actualList = objectMapper.readValue(
-                root.get("content").toString(),
-                new TypeReference<>() {
-                }
+            root.get("content").toString(),
+            new TypeReference<>() {
+            }
         );
 
 
         assertThat(actualList)
-                .containsExactlyInAnyOrderElementsOf(expectedList);
+            .usingRecursiveFieldByFieldElementComparator(
+                RecursiveComparisonConfiguration.builder()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .build()
+            )
+            .containsExactlyInAnyOrderElementsOf(expectedList);
 
         assertThat(actualList)
-                .extracting(TeaResponse::name)
-                .isSortedAccordingTo(String::compareTo);
+            .extracting(TeaResponse::name)
+            .isSortedAccordingTo(String::compareTo);
     }
 
     @Test
@@ -196,26 +188,32 @@ class TeaControllerTest extends FullContext {
         teaStorage.saveAll(List.of(gaba, longjing, puer));
 
         List<TeaResponse> expectedList = List.of(
-                teaMapper.toResponse(gaba)
+            teaMapper.toResponse(gaba)
         );
         // when
         String contentAsString = mockMvc.perform(get("/api/v1/teas?teaType=OOLONG&originCountry=China-Taiwan" +
-                "&originRegion=Alishan&name=Alishan Gaba&maxAmount=10&minAmount=1&minRating=4.70"))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                "&originRegion=Alishan&name=Alishan Gaba&maxPrice=10&minPrice=1&minRating=4.70"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
         // then
         JsonNode root = objectMapper.readTree(contentAsString);
 
         List<TeaResponse> actualList = objectMapper.readValue(
-                root.get("content").toString(),
-                new TypeReference<>() {
-                }
+            root.get("content").toString(),
+            new TypeReference<>() {
+            }
         );
 
-        assertEquals(expectedList, actualList);
+        assertThat(actualList)
+            .usingRecursiveFieldByFieldElementComparator(
+                RecursiveComparisonConfiguration.builder()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .build()
+            )
+            .containsExactlyInAnyOrderElementsOf(expectedList);
     }
 
     @Test
@@ -226,10 +224,10 @@ class TeaControllerTest extends FullContext {
         gaba = teaStorage.save(gaba);
         // when
         String contentAsString = mockMvc.perform(get("/api/v1/teas/" + gaba.getId()))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
         // then
         TeaResponse teaResponse = objectMapper.readValue(contentAsString, TeaResponse.class);
 
@@ -241,69 +239,48 @@ class TeaControllerTest extends FullContext {
         //given, when
         UUID fakeUuid = UUID.randomUUID();
         mockMvc.perform(get("/api/v1/teas/" + fakeUuid))
-                // then
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("1002"))
-                .andExpect(
-                        jsonPath("$.message").value("Чай с id " + fakeUuid + " не найден в каталоге")
-                );
+            // then
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("1002"))
+            .andExpect(
+                jsonPath("$.message").value("Чай с id " + fakeUuid + " не найден в каталоге")
+            );
     }
 
     @Test
     void updateTea_existingId_returnsUpdatedTea() throws Exception {
         // given
-        Tea errorGaba = Tea.builder()
-                .name("GABA Alishani")
-                .originCountry("Taiwani")
-                .originRegion("Alishani")
-                .type(TeaType.PUER)
-                .notes("GABA processed calming effect")
-                .build();
-
-        errorGaba = teaStorage.save(errorGaba);
-
-        Tea updatedGaba = getGaba();
+        Tea teaToUpdate = teaStorage.save(Tea.builder()
+            .name("GABA Alishani")
+            .originCountry("Taiwani")
+            .originRegion("Alishani")
+            .type(TeaType.PUER)
+            .notes("GABA processed calming effect")
+            .price(PRICE)
+            .build());
+        Tea expectedTea = getGaba();
         TeaRequest request = getGabaRequest();
 
         // when
-        String contentAsString = mockMvc.perform(
-                        put("/api/v1/teas/" + errorGaba.getId())
-                                .content(objectMapper.writeValueAsString(request))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        String responseBody = mockMvc.perform(
+                put("/api/v1/teas/{id}", teaToUpdate.getId())
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
         // then
-        TeaResponse teaResponse = objectMapper.readValue(contentAsString, TeaResponse.class);
+        TeaResponse response = objectMapper.readValue(responseBody, TeaResponse.class);
 
-        assertNotNull(teaResponse);
-        TeaResponse expected = teaMapper.toResponse(updatedGaba);
-
-        assertThat(teaResponse)
-                .usingRecursiveComparison()
-                .ignoringFields("id")
-                .ignoringFields("createdAt")
-                .ignoringFields("updatedAt")
-                .withComparatorForType(
-                        nullsFirst(BigDecimal::compareTo),
-                        BigDecimal.class
-                )
-                .isEqualTo(expected);
-
-        Tea teaFromStorage = teaStorage.findById(teaResponse.id()).get();
-
-        assertThat(teaFromStorage)
-                .usingRecursiveComparison()
-                .ignoringFields("id")
-                .ignoringFields("createdAt")
-                .ignoringFields("updatedAt")
-                .withComparatorForType(
-                        nullsFirst(BigDecimal::compareTo),
-                        BigDecimal.class
-                )
-                .isEqualTo(updatedGaba);
+        assertThat(response.id()).isEqualTo(teaToUpdate.getId());
+        assertTeaEqualsIgnoringGeneratedFields(response, teaMapper.toResponse(expectedTea));
+        assertThat(teaStorage.findById(teaToUpdate.getId()))
+            .hasValueSatisfying(
+                savedTea -> assertTeaEqualsIgnoringGeneratedFields(savedTea, expectedTea)
+            );
     }
 
     @Test
@@ -314,41 +291,64 @@ class TeaControllerTest extends FullContext {
         mockMvc.perform(put("/api/v1/teas/" + fakeUuid)
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
-                // then
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("1002"))
-                .andExpect(
-                        jsonPath("$.message").value("Чай с id " + fakeUuid + " не найден в каталоге")
-                );
+            // then
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("1002"))
+            .andExpect(
+                jsonPath("$.message").value("Чай с id " + fakeUuid + " не найден в каталоге")
+            );
     }
 
     @Test
-    void deleteTea_existingId_returns204AndDelete() throws Exception {
+    void deleteTea_existingId_returns204AndDeactivatesTea() throws Exception {
         // given
-        Tea gaba = getGaba();
-
-        gaba = teaStorage.save(gaba);
+        Tea savedTea = teaStorage.save(getGaba());
 
         // when
-        mockMvc.perform(
-                        delete("/api/v1/teas/" + gaba.getId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                // then
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/teas/{id}", savedTea.getId()))
+            // then
+            .andExpect(status().isNoContent());
 
-        assertTrue(teaStorage.findById(gaba.getId()).isEmpty());
+        assertThat(teaStorage.findById(savedTea.getId()))
+            .hasValueSatisfying(tea -> assertThat(tea.getActive()).isFalse());
+    }
+
+    @Test
+    void deleteTea_notExistingId_returns204() throws Exception {
+        // when
+        mockMvc.perform(delete("/api/v1/teas/{id}", UUID.randomUUID()))
+            // then
+            .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteTea_nonExistingId_returns204() throws Exception {
         // given, when
         mockMvc.perform(
-                        delete("/api/v1/teas/" + UUID.randomUUID())
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                // then
-                .andExpect(status().isNoContent());
+                delete("/api/v1/teas/" + UUID.randomUUID())
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            // then
+            .andExpect(status().isNoContent());
+    }
+
+    private void assertTeaEqualsIgnoringGeneratedFields(Tea actual, Tea expected) {
+        assertThat(actual)
+            .usingRecursiveComparison()
+            .ignoringFields("id", "createdAt", "updatedAt", "version")
+            .withComparatorForType(nullsFirst(BigDecimal::compareTo), BigDecimal.class)
+            .isEqualTo(expected);
+    }
+
+    private void assertTeaEqualsIgnoringGeneratedFields(
+        TeaResponse actual,
+        TeaResponse expected
+    ) {
+        assertThat(actual)
+            .usingRecursiveComparison()
+            .ignoringFields("id", "createdAt", "updatedAt", "version")
+            .withComparatorForType(nullsFirst(BigDecimal::compareTo), BigDecimal.class)
+            .isEqualTo(expected);
     }
 
     private static final String GABA_NAME = "GABA Alishan";
@@ -363,54 +363,57 @@ class TeaControllerTest extends FullContext {
     private static final String ZHEJIANG = "Zhejiang";
 
     private static final String GABA_NOTES =
-            "GABA processed, creamy, calming effect";
+        "GABA processed, creamy, calming effect";
     private static final String PUER_NOTES =
-            "Earthy, woody, smooth body";
+        "Earthy, woody, smooth body";
     private static final String LONGJING_NOTES =
-            "Chestnut aroma, fresh and sweet aftertaste";
+        "Chestnut aroma, fresh and sweet aftertaste";
 
     private static final BigDecimal RATING_48 = new BigDecimal("4.8");
-    private static final BigDecimal RATING_473 = new BigDecimal("4.73");
-    private static final BigDecimal RATING_466 = new BigDecimal("4.66");
+    private static final BigDecimal PRICE = new BigDecimal("100");
+
 
     private Tea getGaba() {
         return Tea.builder()
-                .name(GABA_NAME)
-                .originCountry(TAIWAN)
-                .originRegion(ALISHAN)
-                .type(TeaType.OOLONG)
-                .notes(GABA_NOTES)
-                .build();
+            .name(GABA_NAME)
+            .originCountry(TAIWAN)
+            .originRegion(ALISHAN)
+            .type(TeaType.OOLONG)
+            .notes(GABA_NOTES)
+            .price(PRICE)
+            .build();
     }
 
     private Tea getPuer() {
         return Tea.builder()
-                .name(PUER_NAME)
-                .originCountry(CHINA)
-                .originRegion(YUNNAN)
-                .type(TeaType.PUER)
-                .notes(PUER_NOTES)
-                .build();
+            .name(PUER_NAME)
+            .originCountry(CHINA)
+            .originRegion(YUNNAN)
+            .type(TeaType.PUER)
+            .notes(PUER_NOTES)
+            .price(PRICE)
+            .build();
     }
 
     private Tea getLongjing() {
         return Tea.builder()
-                .name(LONGJING_NAME)
-                .originCountry(CHINA)
-                .originRegion(ZHEJIANG)
-                .type(TeaType.GREEN)
-                .notes(LONGJING_NOTES)
-                .build();
+            .name(LONGJING_NAME)
+            .originCountry(CHINA)
+            .originRegion(ZHEJIANG)
+            .type(TeaType.GREEN)
+            .notes(LONGJING_NOTES)
+            .price(PRICE)
+            .build();
     }
 
     private TeaRequest getGabaRequest() {
         return new TeaRequest(
-                GABA_NAME,
-                TAIWAN,
-                ALISHAN,
-                TeaType.OOLONG.name(),
-                GABA_NOTES,
-                RATING_48
+            GABA_NAME,
+            TAIWAN,
+            ALISHAN,
+            TeaType.OOLONG.name(),
+            GABA_NOTES,
+            PRICE
         );
     }
 }
