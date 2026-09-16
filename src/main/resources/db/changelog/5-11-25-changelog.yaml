@@ -28,9 +28,13 @@ databaseChangeLog:
               - column:
                   name: origin_country
                   type: varchar(255)
+                  constraints:
+                    nullable: false
               - column:
                   name: origin_region
                   type: varchar(255)
+                  constraints:
+                    nullable: false
               - column:
                   name: type
                   type: varchar(50)
@@ -39,6 +43,8 @@ databaseChangeLog:
               - column:
                   name: notes
                   type: text
+                  constraints:
+                    nullable: false
               - column:
                   name: price
                   type: NUMERIC(10,2)
@@ -52,9 +58,13 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: datetime
+                  constraints:
+                    nullable: false
               - column:
                   name: updated_at
                   type: datetime
+                  constraints:
+                    nullable: false
         - createIndex:
             tableName: tea
             indexName: idx_tea_type

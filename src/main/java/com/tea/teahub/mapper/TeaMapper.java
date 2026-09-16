@@ -29,11 +29,7 @@ public abstract class TeaMapper {
         return type == null ? null : type.name();
     }
 
-    protected TeaType map(String type) {
-        return type == null ? null : TeaType.valueOf(type);
-    }
-
-    protected BigDecimal map(BigDecimal amount) {
-        return amount == null ? null : amount.stripTrailingZeros();
+    protected BigDecimal map(BigDecimal price) {
+        return price == null ? null : price.stripTrailingZeros();
     }
 }

@@ -29,14 +29,14 @@ interface TeaSpecification {
                 .reduce(Specification.unrestricted(), Specification::and);
     }
 
-    static Specification<Tea> amountGreaterThan(Integer amount) {
+    static Specification<Tea> priceGreaterThan(Integer price) {
         return (root, query, criteriaBuilder) ->
-            criteriaBuilder.greaterThan(root.get("amount"), amount);
+            criteriaBuilder.greaterThan(root.get("price"), price);
     }
 
-    static Specification<Tea> amountLessThan(Integer amount) {
+    static Specification<Tea> priceLessThan(Integer price) {
         return (root, query, criteriaBuilder) ->
-            criteriaBuilder.lessThan(root.get("amount"), amount);
+            criteriaBuilder.lessThan(root.get("price"), price);
     }
 
     private static Specification<Tea> hasWordInName(String word) {

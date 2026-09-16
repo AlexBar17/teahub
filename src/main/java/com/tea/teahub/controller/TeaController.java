@@ -35,8 +35,8 @@ public class TeaController {
             @RequestParam(required = false) String originCountry,
             @RequestParam(required = false) String originRegion,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Integer maxAmount,
-            @RequestParam(required = false) Integer minAmount,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(required = false) Integer minPrice,
             @PageableDefault(sort = "name") Pageable pageable) {
 
         TeaFilter filter = new TeaFilter(
@@ -44,8 +44,8 @@ public class TeaController {
             originCountry,
             originRegion,
             name,
-            maxAmount,
-            minAmount
+            maxPrice,
+            minPrice
         );
         log.info("Запрос на получение чая по фильтру: {}", filter);
         return teaService.getTeaList(filter, pageable);

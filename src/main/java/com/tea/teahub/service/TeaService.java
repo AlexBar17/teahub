@@ -67,7 +67,7 @@ public class TeaService {
         tea.setName(teaRequest.name());
         tea.setOriginCountry(teaRequest.originCountry());
         tea.setOriginRegion(teaRequest.originRegion());
-        tea.setType(TeaType.valueOf(teaRequest.type()));
+        tea.setType(teaRequest.type());
         tea.setNotes(teaRequest.notes());
         tea.setPrice(teaRequest.price());
 
@@ -112,10 +112,10 @@ public class TeaService {
             specification = specification.and(TeaSpecification.hasOriginRegion(teaFilter.originRegion()));
         }
         if (teaFilter.maxPrice() != null) {
-            specification = specification.and(TeaSpecification.amountLessThan(teaFilter.maxPrice()));
+            specification = specification.and(TeaSpecification.priceLessThan(teaFilter.maxPrice()));
         }
         if (teaFilter.minPrice() != null) {
-            specification = specification.and(TeaSpecification.amountGreaterThan(teaFilter.minPrice()));
+            specification = specification.and(TeaSpecification.priceGreaterThan(teaFilter.minPrice()));
         }
         specification = specification.and(TeaSpecification.isActive());
         return specification;

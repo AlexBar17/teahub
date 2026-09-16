@@ -96,7 +96,6 @@ class TeaControllerTest extends FullContext {
                     "name": "",
                         "originCountry": " ",
                         "originRegion": "",
-                        "type": "",
                         "notes": "",
                         "price": ""
                 }
@@ -110,7 +109,7 @@ class TeaControllerTest extends FullContext {
                 new ValidationErrorMessage.Violation("name", "must not be blank"),
                 new ValidationErrorMessage.Violation("originCountry", "must not be blank"),
                 new ValidationErrorMessage.Violation("notes", "must not be blank"),
-                new ValidationErrorMessage.Violation("type", "must not be blank"),
+                new ValidationErrorMessage.Violation("type", "must not be null"),
                 new ValidationErrorMessage.Violation("price", "must not be null")
             )
         );
@@ -192,7 +191,7 @@ class TeaControllerTest extends FullContext {
         );
         // when
         String contentAsString = mockMvc.perform(get("/api/v1/teas?teaType=OOLONG&originCountry=China-Taiwan" +
-                "&originRegion=Alishan&name=Alishan Gaba&maxPrice=10&minPrice=1&minRating=4.70"))
+                "&originRegion=Alishan&name=Alishan Gaba&maxPrice=101&minPrice=1"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
@@ -411,7 +410,7 @@ class TeaControllerTest extends FullContext {
             GABA_NAME,
             TAIWAN,
             ALISHAN,
-            TeaType.OOLONG.name(),
+            TeaType.OOLONG,
             GABA_NOTES,
             PRICE
         );
