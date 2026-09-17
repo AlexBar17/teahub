@@ -94,10 +94,11 @@ class TeaControllerTest extends FullContext {
         String invalidJson = """
                 {
                     "name": "",
-                        "originCountry": " ",
-                        "originRegion": "",
-                        "notes": "",
-                        "price": ""
+                    "originCountry": " ",
+                    "originRegion": "",
+                    "notes": "",
+                    "type": null,
+                    "price": null
                 }
             """;
 

@@ -1,11 +1,16 @@
 package com.tea.teahub;
 
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-public abstract class PostgresContainerTest {
+@TestConfiguration(proxyBeanMethods = false)
+public class PostgresContainerTest {
 
+    @Bean
     @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest");
-
+    PostgreSQLContainer<?> postgreSQLContainer() {
+        return new PostgreSQLContainer<>("postgres:15.19");
+    }
 }
