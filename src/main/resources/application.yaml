@@ -4,7 +4,10 @@ server:
 spring:
   application:
     name: teahub
+  config:
+    import:
+      - optional:file:./.env[.properties]
   datasource:
-    username: sir
-    password: lancer17!
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     url: "jdbc:postgresql://localhost/teahub"

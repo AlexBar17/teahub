@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Mapper(
         componentModel = "spring",
@@ -29,7 +30,7 @@ public abstract class TeaMapper {
         return type == null ? null : type.name();
     }
 
-    protected BigDecimal map(BigDecimal price) {
-        return price == null ? null : price.stripTrailingZeros();
+    protected BigDecimal normalizePrice(BigDecimal price) {
+        return price == null ? null : price.setScale(2, RoundingMode.HALF_UP);
     }
 }
