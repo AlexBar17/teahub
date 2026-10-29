@@ -4,9 +4,7 @@ import com.tea.teahub.controller.dto.TeaRequest;
 import com.tea.teahub.controller.dto.TeaResponse;
 import com.tea.teahub.model.Tea;
 import com.tea.teahub.model.enums.TeaType;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,6 +23,12 @@ public abstract class TeaMapper {
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "version", ignore = true)
     public abstract Tea toEntity(TeaRequest teaRequest);
+
+    @InheritConfiguration(name = "toEntity")
+    public abstract void updateEntity(
+            TeaRequest teaRequest,
+            @MappingTarget Tea tea
+    );
 
     protected String map(TeaType type) {
         return type == null ? null : type.name();
