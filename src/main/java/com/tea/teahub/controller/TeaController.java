@@ -52,14 +52,14 @@ public class TeaController {
     }
 
     @GetMapping("/{id}")
-    TeaResponse getTeaById(@PathVariable String id) {
+    TeaResponse getTeaById(@PathVariable UUID id) {
         log.info("Запрос на получение чая с id: {}", id);
         return teaService.getTeaById(id);
     }
 
     @PutMapping("/{id}")
     TeaResponse updateTea(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @RequestBody @Valid TeaRequest teaRequest) {
         log.info("Запрос на обновление чая с id: {}", id);
         return teaService.updateTea(id, teaRequest);

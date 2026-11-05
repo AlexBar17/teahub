@@ -25,6 +25,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                     unique: true
+                    uniqueConstraintName: uk_tea_name
               - column:
                   name: origin_country
                   type: varchar(255)
