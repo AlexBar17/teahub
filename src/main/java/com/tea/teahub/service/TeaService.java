@@ -2,11 +2,9 @@ package com.tea.teahub.service;
 
 import com.tea.teahub.controller.dto.TeaRequest;
 import com.tea.teahub.controller.dto.TeaResponse;
-import com.tea.teahub.exception.TeaAlreadyExistException;
 import com.tea.teahub.exception.TeaNotFoundException;
 import com.tea.teahub.mapper.TeaMapper;
 import com.tea.teahub.model.Tea;
-import com.tea.teahub.model.enums.TeaType;
 import com.tea.teahub.repository.TeaStorage;
 import com.tea.teahub.service.query.TeaFilter;
 import jakarta.transaction.Transactional;
@@ -29,12 +27,6 @@ public class TeaService {
     private final TeaMapper teaMapper;
 
     public TeaResponse addTea(TeaRequest teaRequest) {
-        teaStorage.findByName(teaRequest.name()).ifPresent(
-                it -> {
-                    throw new TeaAlreadyExistException(teaRequest.name());
-                }
-        );
-
         Tea tea = teaMapper.toEntity(teaRequest);
 
         teaStorage.save(tea);
@@ -51,25 +43,20 @@ public class TeaService {
                 map(teaMapper::toResponse);
     }
 
-    public TeaResponse getTeaById(String id) {
-        Tea tea = teaStorage.findById(UUID.fromString(id)).orElseThrow(
+    public TeaResponse getTeaById(UUID id) {
+        Tea tea = teaStorage.findById(id).orElseThrow(
                 () -> new TeaNotFoundException(id)
         );
 
         return teaMapper.toResponse(tea);
     }
 
-    public TeaResponse updateTea(String id, TeaRequest teaRequest) {
-        Tea tea = teaStorage.findById(UUID.fromString(id)).orElseThrow(
+    public TeaResponse updateTea(UUID id, TeaRequest teaRequest) {
+        Tea tea = teaStorage.findById(id).orElseThrow(
                 () -> new TeaNotFoundException(id)
         );
 
-        tea.setName(teaRequest.name());
-        tea.setOriginCountry(teaRequest.originCountry());
-        tea.setOriginRegion(teaRequest.originRegion());
-        tea.setType(teaRequest.type());
-        tea.setNotes(teaRequest.notes());
-        tea.setPrice(teaRequest.price());
+        teaMapper.updateEntity(teaRequest, tea);
 
         log.info("Чай {} с id: {} успешно обновлен", tea.getName(), tea.getId());
         return teaMapper.toResponse(tea);
