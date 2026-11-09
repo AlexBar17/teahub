@@ -1,5 +1,7 @@
 package com.tea.teahub.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.tea.teahub.FullContext;
 import com.tea.teahub.controller.dto.TeaRequest;
 import com.tea.teahub.controller.dto.TeaResponse;
@@ -10,12 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static com.tea.teahub.fixture.TeaTestData.*;
 import static java.util.Comparator.nullsFirst;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -157,6 +160,65 @@ class TeaUpdateTest extends FullContext {
             .andExpect(
                 jsonPath("$.message").value("Чай с таким именем уже есть в каталоге")
             );
+    }
+
+    @Test
+    void activateTea_existingId_returns204AndActivatesTea() throws Exception {
+        // given
+        Tea unactiveTea = Tea.builder()
+            .name(GABA_NAME)
+            .originCountry(TAIWAN)
+            .originRegion(ALISHAN)
+            .type(TeaType.OOLONG)
+            .notes(GABA_NOTES)
+            .price(PRICE)
+            .active(false)
+            .build();
+
+        Tea savedTea = teaStorage.save(unactiveTea);
+
+        // when
+        mockMvc.perform(post("/api/v1/teas/{id}/activate", savedTea.getId()))
+            // then
+            .andExpect(status().isNoContent());
+
+        assertThat(teaStorage.findById(savedTea.getId()))
+            .hasValueSatisfying(tea -> assertThat(tea.getActive()).isTrue());
+
+        var responseBody = mockMvc.perform(get("/api/v1/teas"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+        JsonNode root = objectMapper.readTree(responseBody);
+
+        List<TeaResponse> actualList = objectMapper.readValue(
+            root.get("content").toString(),
+            new TypeReference<>() {
+            }
+        );
+        assertThat(actualList.size()).isEqualTo(1);
+        assertTeaEqualsIgnoringGeneratedFields(actualList.getFirst(), teaMapper.toResponse(savedTea));
+
+    }
+
+    @Test
+    void activateTea_notExistingId_returns404() throws Exception {
+        // when
+        mockMvc.perform(post("/api/v1/teas/{id}/activate", UUID.randomUUID()))
+            // then
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void activateTea_ActiveTea_returns204() throws Exception {
+        // given
+        Tea savedTea = teaStorage.save(getGaba());
+        // when
+        mockMvc.perform(post("/api/v1/teas/{id}/activate", savedTea.getId()))
+            // then
+            .andExpect(status().isNoContent());
     }
 
     private void assertTeaEqualsIgnoringGeneratedFields(Tea actual, Tea expected) {

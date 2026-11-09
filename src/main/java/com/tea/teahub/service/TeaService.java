@@ -40,12 +40,12 @@ public class TeaService {
         Specification<Tea> specification = getSpecificationByFilter(teaFilter);
 
         return teaStorage.findAll(specification, pageable).
-                map(teaMapper::toResponse);
+            map(teaMapper::toResponse);
     }
 
     public TeaResponse getTeaById(UUID id) {
         Tea tea = teaStorage.findById(id).orElseThrow(
-                () -> new TeaNotFoundException(id)
+            () -> new TeaNotFoundException(id)
         );
 
         return teaMapper.toResponse(tea);
@@ -53,13 +53,22 @@ public class TeaService {
 
     public TeaResponse updateTea(UUID id, TeaRequest teaRequest) {
         Tea tea = teaStorage.findById(id).orElseThrow(
-                () -> new TeaNotFoundException(id)
+            () -> new TeaNotFoundException(id)
         );
 
         teaMapper.updateEntity(teaRequest, tea);
 
         log.info("Чай {} с id: {} успешно обновлен", tea.getName(), tea.getId());
         return teaMapper.toResponse(tea);
+    }
+
+    public void activateTeaById(UUID id) {
+        Tea tea = teaStorage.findById(id).orElseThrow(
+            () -> new TeaNotFoundException(id)
+        );
+
+        tea.setActive(true);
+        log.info("Чай с id: {} успешно активирован", id);
     }
 
     public void deleteById(UUID id) {
@@ -107,5 +116,4 @@ public class TeaService {
         specification = specification.and(TeaSpecification.isActive());
         return specification;
     }
-
 }
