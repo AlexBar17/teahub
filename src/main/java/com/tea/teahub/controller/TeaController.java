@@ -29,6 +29,13 @@ public class TeaController {
         return teaService.addTea(teaRequest);
     }
 
+    @PostMapping("/{id}/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void activateTea(@PathVariable UUID id){
+        log.info("Запрос на активацию чая с id: {}", id);
+        teaService.activateTeaById(id);
+    }
+
     @GetMapping
     Page<TeaResponse> getTeaList(
             @RequestParam(required = false) TeaType teaType,
