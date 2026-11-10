@@ -59,6 +59,8 @@ class TeaCreateTest extends FullContext {
                 savedTea -> {
                     assertTeaEqualsIgnoringGeneratedFields(savedTea, expectedTea);
                     assertThat(savedTea.getPrice().scale()).isEqualTo(2);
+                    assertThat(response.createdAt()).isNotNull();
+                    assertThat(response.updatedAt()).isNotNull();
                 }
             );
         assertThat(response.price().scale()).isEqualTo(2);

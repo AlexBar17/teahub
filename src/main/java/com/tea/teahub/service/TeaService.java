@@ -29,7 +29,7 @@ public class TeaService {
     public TeaResponse addTea(TeaRequest teaRequest) {
         Tea tea = teaMapper.toEntity(teaRequest);
 
-        teaStorage.save(tea);
+        teaStorage.saveAndFlush(tea);
 
         log.info("Чай {} с id: {} успешно добавлен", tea.getName(), tea.getId());
         return teaMapper.toResponse(tea);
@@ -57,6 +57,7 @@ public class TeaService {
         );
 
         teaMapper.updateEntity(teaRequest, tea);
+        teaStorage.flush();
 
         log.info("Чай {} с id: {} успешно обновлен", tea.getName(), tea.getId());
         return teaMapper.toResponse(tea);

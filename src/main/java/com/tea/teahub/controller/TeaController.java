@@ -8,9 +8,10 @@ import com.tea.teahub.service.query.TeaFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,20 +32,21 @@ public class TeaController {
 
     @PostMapping("/{id}/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void activateTea(@PathVariable UUID id){
+    void activateTea(@PathVariable UUID id) {
         log.info("Запрос на активацию чая с id: {}", id);
         teaService.activateTeaById(id);
     }
 
     @GetMapping
-    Page<TeaResponse> getTeaList(
-            @RequestParam(required = false) TeaType teaType,
-            @RequestParam(required = false) String originCountry,
-            @RequestParam(required = false) String originRegion,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Integer maxPrice,
-            @RequestParam(required = false) Integer minPrice,
-            @PageableDefault(sort = "name") Pageable pageable) {
+    PagedModel<TeaResponse> getTeaList(
+        @RequestParam(required = false) TeaType teaType,
+        @RequestParam(required = false) String originCountry,
+        @RequestParam(required = false) String originRegion,
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) Integer maxPrice,
+        @RequestParam(required = false) Integer minPrice,
+        @ParameterObject
+        @PageableDefault(sort = "name") Pageable pageable) {
 
         TeaFilter filter = new TeaFilter(
             teaType,
@@ -55,7 +57,9 @@ public class TeaController {
             minPrice
         );
         log.info("Запрос на получение чая по фильтру: {}", filter);
-        return teaService.getTeaList(filter, pageable);
+        return new PagedModel<>(
+            teaService.getTeaList(filter, pageable)
+        );
     }
 
     @GetMapping("/{id}")
@@ -66,8 +70,8 @@ public class TeaController {
 
     @PutMapping("/{id}")
     TeaResponse updateTea(
-            @PathVariable UUID id,
-            @RequestBody @Valid TeaRequest teaRequest) {
+        @PathVariable UUID id,
+        @RequestBody @Valid TeaRequest teaRequest) {
         log.info("Запрос на обновление чая с id: {}", id);
         return teaService.updateTea(id, teaRequest);
     }
