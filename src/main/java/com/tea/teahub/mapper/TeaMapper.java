@@ -3,7 +3,6 @@ package com.tea.teahub.mapper;
 import com.tea.teahub.controller.dto.TeaRequest;
 import com.tea.teahub.controller.dto.TeaResponse;
 import com.tea.teahub.model.Tea;
-import com.tea.teahub.model.enums.TeaType;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
@@ -29,10 +28,6 @@ public abstract class TeaMapper {
             TeaRequest teaRequest,
             @MappingTarget Tea tea
     );
-
-    protected String map(TeaType type) {
-        return type == null ? null : type.name();
-    }
 
     protected BigDecimal normalizePrice(BigDecimal price) {
         return price == null ? null : price.setScale(2, RoundingMode.HALF_UP);

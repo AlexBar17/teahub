@@ -68,6 +68,12 @@ class TeaUpdateTest extends FullContext {
                 }
             );
         assertThat(response.price().scale()).isEqualTo(2);
+
+        Tea updatedTea = teaStorage.findById(teaToUpdate.getId())
+            .orElseThrow();
+
+        assertThat(response.createdAt()).isEqualTo(updatedTea.getCreatedAt());
+        assertThat(response.updatedAt()).isEqualTo(updatedTea.getUpdatedAt());
     }
 
     @Test

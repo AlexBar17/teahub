@@ -3,25 +3,19 @@ package com.tea.teahub.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tea.teahub.FullContext;
-import com.tea.teahub.controller.dto.TeaRequest;
 import com.tea.teahub.controller.dto.TeaResponse;
-import com.tea.teahub.controller.dto.ValidationErrorMessage;
 import com.tea.teahub.model.Tea;
-import com.tea.teahub.model.enums.TeaType;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Stream;
 
 import static com.tea.teahub.fixture.TeaTestData.*;
-import static java.util.Comparator.nullsFirst;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,6 +45,9 @@ class TeaSearchTest extends FullContext {
 
             // then
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.page.number").value(0))
+            .andExpect(jsonPath("$.page.size").value(10))
+            .andExpect(jsonPath("$.page.totalElements").value(3))
             .andReturn()
             .getResponse()
             .getContentAsString();
@@ -213,7 +210,7 @@ class TeaSearchTest extends FullContext {
             new TypeReference<>() {
             }
         );
-        List<TeaResponse> expectedList = List.of(expectedTeas).stream()
+        List<TeaResponse> expectedList = Stream.of(expectedTeas)
             .map(teaMapper::toResponse)
             .toList();
 
