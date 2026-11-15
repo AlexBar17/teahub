@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
     info = @Info(
         title = "Tea Hub",
-        version = "0.1.0",
+        version = "1.0.0",
         description = "Контракт для работы с бэкендом каталога чаев"
     )
 )
