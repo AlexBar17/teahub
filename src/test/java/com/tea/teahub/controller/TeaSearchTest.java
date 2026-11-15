@@ -158,49 +158,77 @@ class TeaSearchTest extends FullContext {
     }
 
     @Test
-    void getTeaList_maxPriceFilter_returnsMatchingTea() throws Exception {
+    void getTeaList_maxPriceFilter_includesBoundaryPrice() throws Exception {
         // given
-        Tea gaba = getGaba();
-        Tea longjing = getLongjing();
-        Tea puer = getPuer();
-        longjing.setPrice(new BigDecimal("150"));
-        puer.setPrice(new BigDecimal("200"));
-
-        teaStorage.saveAll(List.of(gaba, longjing, puer));
+        List<Tea> teas = saveTeasAtPriceBoundaries();
 
         // when
         String contentAsString = mockMvc.perform(get("/api/v1/teas")
-                .param("maxPrice", "101"))
+                .param("maxPrice", "1000"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
             .getContentAsString();
 
         // then
-        assertTeaListContainsExactly(contentAsString, gaba);
+        assertTeaListContainsExactly(contentAsString, teas.get(0), teas.get(1));
     }
 
     @Test
-    void getTeaList_minPriceFilter_returnsMatchingTea() throws Exception {
+    void getTeaList_minPriceFilter_includesBoundaryPrice() throws Exception {
         // given
-        Tea gaba = getGaba();
-        Tea longjing = getLongjing();
-        Tea puer = getPuer();
-        longjing.setPrice(new BigDecimal("50"));
-        puer.setPrice(new BigDecimal("75"));
-
-        teaStorage.saveAll(List.of(gaba, longjing, puer));
+        List<Tea> teas = saveTeasAtPriceBoundaries();
 
         // when
         String contentAsString = mockMvc.perform(get("/api/v1/teas")
-                .param("minPrice", "99"))
+                .param("minPrice", "1000"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
             .getContentAsString();
 
         // then
-        assertTeaListContainsExactly(contentAsString, gaba);
+        assertTeaListContainsExactly(contentAsString, teas.get(1), teas.get(2));
+    }
+
+    @Test
+    void getTeaList_equalMinAndMaxPrice_returnsBoundaryPrice() throws Exception {
+        List<Tea> teas = saveTeasAtPriceBoundaries();
+
+        String contentAsString = mockMvc.perform(get("/api/v1/teas")
+                .param("minPrice", "1000")
+                .param("maxPrice", "1000"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+        assertTeaListContainsExactly(contentAsString, teas.get(1));
+    }
+
+    @Test
+    void getTeaList_priceRange_returnsPricesWithinBounds() throws Exception {
+        List<Tea> teas = saveTeasAtPriceBoundaries();
+
+        String contentAsString = mockMvc.perform(get("/api/v1/teas")
+                .param("minPrice", "999")
+                .param("maxPrice", "1001"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+        assertTeaListContainsExactly(contentAsString, teas.toArray(Tea[]::new));
+    }
+
+    private List<Tea> saveTeasAtPriceBoundaries() {
+        Tea belowBoundary = getGaba();
+        Tea atBoundary = getLongjing();
+        Tea aboveBoundary = getPuer();
+        belowBoundary.setPrice(new BigDecimal("999.99"));
+        atBoundary.setPrice(new BigDecimal("1000.00"));
+        aboveBoundary.setPrice(new BigDecimal("1000.01"));
+        return teaStorage.saveAll(List.of(belowBoundary, atBoundary, aboveBoundary));
     }
 
     private void assertTeaListContainsExactly(String responseBody, Tea... expectedTeas) throws Exception {
