@@ -109,10 +109,10 @@ public class TeaService {
             specification = specification.and(TeaSpecification.hasOriginRegion(teaFilter.originRegion()));
         }
         if (teaFilter.maxPrice() != null) {
-            specification = specification.and(TeaSpecification.priceLessThan(teaFilter.maxPrice()));
+            specification = specification.and(TeaSpecification.priceLessThanOrEqualTo(teaFilter.maxPrice()));
         }
         if (teaFilter.minPrice() != null) {
-            specification = specification.and(TeaSpecification.priceGreaterThan(teaFilter.minPrice()));
+            specification = specification.and(TeaSpecification.priceGreaterThanOrEqualTo(teaFilter.minPrice()));
         }
         specification = specification.and(TeaSpecification.isActive());
         return specification;

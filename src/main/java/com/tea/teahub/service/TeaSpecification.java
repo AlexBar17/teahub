@@ -4,6 +4,7 @@ import com.tea.teahub.model.Tea;
 import com.tea.teahub.model.enums.TeaType;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 interface TeaSpecification {
@@ -29,14 +30,18 @@ interface TeaSpecification {
                 .reduce(Specification.unrestricted(), Specification::and);
     }
 
-    static Specification<Tea> priceGreaterThan(Integer price) {
+    static Specification<Tea> priceGreaterThanOrEqualTo(Integer price) {
         return (root, query, criteriaBuilder) ->
-            criteriaBuilder.greaterThan(root.get("price"), price);
+            criteriaBuilder.greaterThanOrEqualTo(
+                root.<BigDecimal>get("price"), BigDecimal.valueOf(price)
+            );
     }
 
-    static Specification<Tea> priceLessThan(Integer price) {
+    static Specification<Tea> priceLessThanOrEqualTo(Integer price) {
         return (root, query, criteriaBuilder) ->
-            criteriaBuilder.lessThan(root.get("price"), price);
+            criteriaBuilder.lessThanOrEqualTo(
+                root.<BigDecimal>get("price"), BigDecimal.valueOf(price)
+            );
     }
 
     private static Specification<Tea> hasWordInName(String word) {
